@@ -83,7 +83,7 @@ class Whisper
   #
   # Raises `Whisper::Error` if the file is missing or not a valid WAV.
   def transcribe_file(path : String, **kwargs) : Array(Segment)
-    samples = load_wav_samples(path)
+    samples = Whisper.load_wav_samples(path)
     transcribe(samples, **kwargs)
   end
 
@@ -140,7 +140,7 @@ class Whisper
   # Expects: mono, 16kHz, 16-bit signed PCM (standard whisper input format).
   # Use ffmpeg to convert other formats:
   #   ffmpeg -i input.mp3 -ar 16000 -ac 1 -f wav output.wav
-  private def load_wav_samples(path : String) : Array(Float32)
+  def self.load_wav_samples(path : String) : Array(Float32)
     raise Error.new("Audio file not found: #{path}") unless File.exists?(path)
 
     File.open(path, "rb") do |file|
