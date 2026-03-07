@@ -7,8 +7,48 @@
 # segments.each { |seg| puts "#{seg.start_timestamp} #{seg.text}" }
 # whisper.close
 # ```
+require "log"
+
 class Whisper
   class Error < Exception; end
+
+  Log = ::Log.for("whisper-cry")
+
+  @@log_buffer : String = ""
+  @@log_level : LibWhisper::GgmlLogLevel = LibWhisper::GgmlLogLevel::Info
+  @@logging_setup : Bool = false
+
+  protected def self.setup_logging
+    return if @@logging_setup
+    @@logging_setup = true
+
+    LibWhisper.log_set(->(level : LibWhisper::GgmlLogLevel, text : LibC::Char*, _user_data : Void*) {
+      message = String.new(text)
+
+      if level == LibWhisper::GgmlLogLevel::Cont
+        @@log_buffer += message
+      else
+        flush_log_buffer unless @@log_buffer.empty?
+        @@log_level = level
+        @@log_buffer = message
+      end
+
+      flush_log_buffer if @@log_buffer.ends_with?("\n")
+    }, Pointer(Void).null)
+  end
+
+  protected def self.flush_log_buffer
+    msg = @@log_buffer.chomp
+    @@log_buffer = ""
+    return if msg.empty?
+
+    case @@log_level
+    when .debug? then Log.debug { msg }
+    when .warn?  then Log.warn { msg }
+    when .error? then Log.error { msg }
+    else              Log.info { msg }
+    end
+  end
 
   getter? closed : Bool = false
 
@@ -19,6 +59,7 @@ class Whisper
   #
   # Raises `Whisper::Error` if the file doesn't exist or the model fails to load.
   def initialize(model_path : String, use_gpu : Bool = false)
+    Whisper.setup_logging
     raise Error.new("Model file not found: #{model_path}") unless File.exists?(model_path)
 
     ctx_params = LibWhisper.context_default_params

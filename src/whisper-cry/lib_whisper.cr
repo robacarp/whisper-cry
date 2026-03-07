@@ -9,6 +9,15 @@ lib LibWhisper
   alias Pos = Int32
   alias SeqId = Int32
 
+  enum GgmlLogLevel
+    None  = 0
+    Debug = 1
+    Info  = 2
+    Warn  = 3
+    Error = 4
+    Cont  = 5
+  end
+
   type Context = Void*
   type State = Void*
 
@@ -279,6 +288,13 @@ lib LibWhisper
   fun get_timings = whisper_get_timings(ctx : Context) : Timings*
   fun print_timings = whisper_print_timings(ctx : Context) : Void
   fun reset_timings = whisper_reset_timings(ctx : Context) : Void
+
+  # --- Logging ---
+
+  fun log_set = whisper_log_set(
+    callback : (GgmlLogLevel, LibC::Char*, Void* ->),
+    user_data : Void*,
+  ) : Void
 
   # --- Misc ---
 
