@@ -1,2 +1,2 @@
 require "spec"
-require "../src/whisper_cry"
+require "../src/whisper-cry"

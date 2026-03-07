@@ -21,7 +21,10 @@ class Whisper
     # Useful for diarization or dialog formatting.
     getter speaker_turn_next : Bool
 
-    def initialize(@text, @start_ms, @end_ms, @no_speech_probability, @speaker_turn_next)
+    # Per-token data for this segment (empty unless token-level data was requested).
+    getter tokens : Array(Token)
+
+    def initialize(@text, @start_ms, @end_ms, @no_speech_probability, @speaker_turn_next, @tokens = [] of Token)
     end
 
     # Segment start time in seconds.

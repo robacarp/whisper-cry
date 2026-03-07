@@ -82,4 +82,22 @@ describe Whisper::Segment do
       seg.speaker_turn_next.should be_true
     end
   end
+
+  describe "#tokens" do
+    it "defaults to an empty array" do
+      seg = Whisper::Segment.new(text: "", start_ms: 0, end_ms: 0, no_speech_probability: 0.0_f32, speaker_turn_next: false)
+      seg.tokens.should be_empty
+    end
+
+    it "stores provided tokens" do
+      tokens = [
+        Whisper::Token.new(text: "Hello", id: 1, probability: 0.9_f32, start_ms: 0_i64, end_ms: 50_i64),
+        Whisper::Token.new(text: " world", id: 2, probability: 0.85_f32, start_ms: 50_i64, end_ms: 100_i64),
+      ]
+      seg = Whisper::Segment.new(text: "Hello world", start_ms: 0, end_ms: 100, no_speech_probability: 0.0_f32, speaker_turn_next: false, tokens: tokens)
+      seg.tokens.size.should eq(2)
+      seg.tokens[0].text.should eq("Hello")
+      seg.tokens[1].text.should eq(" world")
+    end
+  end
 end

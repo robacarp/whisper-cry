@@ -1,3 +1,7 @@
 require "./whisper-cry/lib_whisper"
+require "./whisper-cry/token"
 require "./whisper-cry/segment"
+require "./whisper-cry/model_info"
+require "./whisper-cry/state"
+require "./whisper-cry/vad"
 require "./whisper-cry/whisper"
