@@ -21,10 +21,14 @@ class Whisper
     # Useful for diarization or dialog formatting.
     getter speaker_turn_next : Bool
 
+    # Incrementing speaker turn counter. Starts at 0 and increments at each
+    # speaker turn boundary (when the previous segment had `speaker_turn_next == true`).
+    getter speaker_turn : Int32
+
     # Per-token data for this segment (empty unless token-level data was requested).
     getter tokens : Array(Token)
 
-    def initialize(@text, @start_ms, @end_ms, @no_speech_probability, @speaker_turn_next, @tokens = [] of Token)
+    def initialize(@text, @start_ms, @end_ms, @no_speech_probability, @speaker_turn_next, @speaker_turn = 0, @tokens = [] of Token)
     end
 
     # Segment start time in seconds.

@@ -81,6 +81,16 @@ describe Whisper::Segment do
       seg = Whisper::Segment.new(text: "", start_ms: 0, end_ms: 0, no_speech_probability: 0.0_f32, speaker_turn_next: true)
       seg.speaker_turn_next.should be_true
     end
+
+    it "defaults speaker_turn to 0" do
+      seg = Whisper::Segment.new(text: "", start_ms: 0, end_ms: 0, no_speech_probability: 0.0_f32, speaker_turn_next: false)
+      seg.speaker_turn.should eq(0)
+    end
+
+    it "stores speaker_turn" do
+      seg = Whisper::Segment.new(text: "", start_ms: 0, end_ms: 0, no_speech_probability: 0.0_f32, speaker_turn_next: false, speaker_turn: 3)
+      seg.speaker_turn.should eq(3)
+    end
   end
 
   describe "#tokens" do

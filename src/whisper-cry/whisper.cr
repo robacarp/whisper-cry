@@ -126,13 +126,14 @@ class Whisper
   # - *token_timestamps*: when `true`, enables per-token timestamp computation.
   #
   # Raises `Whisper::Error` if the context is closed or transcription fails.
-  def transcribe(samples : Array(Float32), language : String? = "en", n_threads : Int32 = 4, translate : Bool = false, token_timestamps : Bool = false) : Array(Segment)
+  def transcribe(samples : Array(Float32), language : String? = "en", n_threads : Int32 = 4, translate : Bool = false, token_timestamps : Bool = false, tdrz_enable : Bool = false) : Array(Segment)
     raise Error.new("Context has been closed") if closed?
     raise Error.new("No audio samples provided") if samples.empty?
 
     params = LibWhisper.full_default_params(LibWhisper::SamplingStrategy::Greedy)
     params.n_threads = n_threads
     params.translate = translate
+    params.tdrz_enable = tdrz_enable
     params.print_special = false
     params.print_progress = false
     params.print_realtime = false
@@ -156,13 +157,14 @@ class Whisper
   # in parallel on the same context.
   #
   # Accepts the same keyword arguments as `#transcribe`, plus *n_processors*.
-  def transcribe_parallel(samples : Array(Float32), n_processors : Int32 = 2, language : String? = "en", n_threads : Int32 = 4, translate : Bool = false, token_timestamps : Bool = false) : Array(Segment)
+  def transcribe_parallel(samples : Array(Float32), n_processors : Int32 = 2, language : String? = "en", n_threads : Int32 = 4, translate : Bool = false, token_timestamps : Bool = false, tdrz_enable : Bool = false) : Array(Segment)
     raise Error.new("Context has been closed") if closed?
     raise Error.new("No audio samples provided") if samples.empty?
 
     params = LibWhisper.full_default_params(LibWhisper::SamplingStrategy::Greedy)
     params.n_threads = n_threads
     params.translate = translate
+    params.tdrz_enable = tdrz_enable
     params.print_special = false
     params.print_progress = false
     params.print_realtime = false
@@ -502,6 +504,7 @@ class Whisper
   private def read_segments(include_tokens : Bool = false) : Array(Segment)
     n = LibWhisper.full_n_segments(@ctx)
     segments = Array(Segment).new(n)
+    current_speaker_turn = 0
 
     n.times do |i|
       text_ptr = LibWhisper.full_get_segment_text(@ctx, i)
@@ -510,7 +513,11 @@ class Whisper
       t0 = LibWhisper.full_get_segment_t0(@ctx, i) * 10
       t1 = LibWhisper.full_get_segment_t1(@ctx, i) * 10
       no_speech = LibWhisper.full_get_segment_no_speech_prob(@ctx, i)
-      speaker_turn = LibWhisper.full_get_segment_speaker_turn_next(@ctx, i)
+      speaker_turn_next = LibWhisper.full_get_segment_speaker_turn_next(@ctx, i)
+
+      if i > 0 && segments[i - 1].speaker_turn_next
+        current_speaker_turn += 1
+      end
 
       tokens = include_tokens ? read_tokens(i) : [] of Token
 
@@ -519,7 +526,8 @@ class Whisper
         start_ms: t0,
         end_ms: t1,
         no_speech_probability: no_speech,
-        speaker_turn_next: speaker_turn,
+        speaker_turn_next: speaker_turn_next,
+        speaker_turn: current_speaker_turn,
         tokens: tokens,
       )
     end

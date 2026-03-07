@@ -32,13 +32,14 @@ class Whisper
     # Runs full inference with this state on the given audio samples.
     #
     # *samples* must be 32-bit float PCM audio normalized to [-1.0, 1.0], mono, at 16kHz.
-    def transcribe(samples : Array(Float32), language : String? = "en", n_threads : Int32 = 4, translate : Bool = false, token_timestamps : Bool = false) : Array(Segment)
+    def transcribe(samples : Array(Float32), language : String? = "en", n_threads : Int32 = 4, translate : Bool = false, token_timestamps : Bool = false, tdrz_enable : Bool = false) : Array(Segment)
       raise Whisper::Error.new("State has been closed") if closed?
       raise Whisper::Error.new("No audio samples provided") if samples.empty?
 
       params = LibWhisper.full_default_params(LibWhisper::SamplingStrategy::Greedy)
       params.n_threads = n_threads
       params.translate = translate
+      params.tdrz_enable = tdrz_enable
       params.print_special = false
       params.print_progress = false
       params.print_realtime = false
@@ -125,6 +126,7 @@ class Whisper
     private def read_segments(include_tokens : Bool = false) : Array(Segment)
       n = LibWhisper.full_n_segments_from_state(@state)
       segments = Array(Segment).new(n)
+      current_speaker_turn = 0
 
       n.times do |i|
         text_ptr = LibWhisper.full_get_segment_text_from_state(@state, i)
@@ -133,7 +135,11 @@ class Whisper
         t0 = LibWhisper.full_get_segment_t0_from_state(@state, i) * 10
         t1 = LibWhisper.full_get_segment_t1_from_state(@state, i) * 10
         no_speech = LibWhisper.full_get_segment_no_speech_prob_from_state(@state, i)
-        speaker_turn = LibWhisper.full_get_segment_speaker_turn_next_from_state(@state, i)
+        speaker_turn_next = LibWhisper.full_get_segment_speaker_turn_next_from_state(@state, i)
+
+        if i > 0 && segments[i - 1].speaker_turn_next
+          current_speaker_turn += 1
+        end
 
         tokens = include_tokens ? read_tokens(i) : [] of Token
 
@@ -142,7 +148,8 @@ class Whisper
           start_ms: t0,
           end_ms: t1,
           no_speech_probability: no_speech,
-          speaker_turn_next: speaker_turn,
+          speaker_turn_next: speaker_turn_next,
+          speaker_turn: current_speaker_turn,
           tokens: tokens,
         )
       end
