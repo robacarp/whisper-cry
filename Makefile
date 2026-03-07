@@ -2,10 +2,13 @@ WHISPER_CPP_VERSION := v1.8.3
 WHISPER_CPP_DIR := ext/whisper.cpp
 BUILD_DIR := $(WHISPER_CPP_DIR)/build
 VENDOR_LIB := vendor/lib
+MODEL_DIR := models
+MODEL_FILE := $(MODEL_DIR)/ggml-tiny.en.bin
+MODEL_URL := https://huggingface.co/ggerganov/whisper.cpp/resolve/main/ggml-tiny.en.bin
 
 STATIC_LIBS := libwhisper.a libggml.a libggml-base.a libggml-cpu.a libggml-blas.a libggml-metal.a
 
-.PHONY: all clean
+.PHONY: all clean model demo
 
 all: $(addprefix $(VENDOR_LIB)/,$(STATIC_LIBS))
 
@@ -29,6 +32,15 @@ $(VENDOR_LIB)/%: $(BUILD_DIR)/src/libwhisper.a
 			echo "Warning: $$lib not found in build output"; \
 		fi; \
 	done
+
+$(MODEL_FILE):
+	@mkdir -p $(MODEL_DIR)
+	curl -L -o $(MODEL_FILE) $(MODEL_URL)
+
+model: $(MODEL_FILE)
+
+demo: all model
+	shards build --error-trace demo
 
 clean:
 	rm -rf $(BUILD_DIR) $(VENDOR_LIB)

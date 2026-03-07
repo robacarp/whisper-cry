@@ -4,3 +4,7 @@ version: 1.8.3
 crystal: '>= 1.19.1'
 
 license: MIT
+
+targets:
+  demo:
+    main: src/demo.cr

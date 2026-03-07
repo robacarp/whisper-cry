@@ -11,3 +11,6 @@
 # Built artifacts
 /ext/whisper.cpp/
 /vendor/lib/
+
+# Downloaded models
+/models/
