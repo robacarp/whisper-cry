@@ -8,16 +8,8 @@ on:
 
 jobs:
   build-linux:
-    strategy:
-      fail-fast: false
-      matrix:
-        include:
-          - runner: ubuntu-latest
-            arch: amd64
-          - runner: ubuntu-24.04-arm
-            arch: arm64
-    name: Linux (${{ matrix.arch }})
-    runs-on: ${{ matrix.runner }}
+    name: Linux (amd64)
+    runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
       - run: docker build .
