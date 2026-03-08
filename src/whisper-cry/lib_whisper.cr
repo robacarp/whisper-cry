@@ -1,4 +1,8 @@
-@[Link(ldflags: "#{__DIR__}/../../vendor/lib/libwhisper.a #{__DIR__}/../../vendor/lib/libggml.a #{__DIR__}/../../vendor/lib/libggml-base.a #{__DIR__}/../../vendor/lib/libggml-cpu.a #{__DIR__}/../../vendor/lib/libggml-blas.a #{__DIR__}/../../vendor/lib/libggml-metal.a -lstdc++ -framework Accelerate -framework Foundation -framework Metal -framework MetalKit")]
+{% if flag?(:darwin) %}
+  @[Link(ldflags: "#{__DIR__}/../../vendor/lib/libwhisper.a #{__DIR__}/../../vendor/lib/libggml.a #{__DIR__}/../../vendor/lib/libggml-base.a #{__DIR__}/../../vendor/lib/libggml-cpu.a #{__DIR__}/../../vendor/lib/libggml-blas.a #{__DIR__}/../../vendor/lib/libggml-metal.a -lstdc++ -framework Accelerate -framework Foundation -framework Metal -framework MetalKit")]
+{% elsif flag?(:linux) %}
+  @[Link(ldflags: "#{__DIR__}/../../vendor/lib/libwhisper.a #{__DIR__}/../../vendor/lib/libggml.a #{__DIR__}/../../vendor/lib/libggml-base.a #{__DIR__}/../../vendor/lib/libggml-cpu.a #{__DIR__}/../../vendor/lib/libggml-blas.a -lstdc++ -lm -lpthread -lgomp -lopenblas")]
+{% end %}
 lib LibWhisper
   SAMPLE_RATE = 16000
   N_FFT       =   400
